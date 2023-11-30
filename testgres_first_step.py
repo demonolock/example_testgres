@@ -2,7 +2,13 @@ import os
 import testgres
 import unittest
 
+"""
+Before test run you should set up env variable PG_CONFIG
+"""
+
 # Define the node name and paths for the test environment
+# These params will set up pgdata path and log path for the node,
+# using in this test
 node_name = 'my_pg_node'
 current_file_name = os.path.basename(os.path.abspath(__file__))
 current_dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -40,13 +46,14 @@ class TestgresFirstStep(unittest.TestCase):
         # Create a new database and a table within it
         node.safe_psql('postgres', 'CREATE DATABASE test1')
         node.safe_psql('test1', 'CREATE TABLE T1 AS SELECT GENERATE_SERIES(0,100)')
+        # The resutl of query can be get and processed
         result = node.safe_psql('test1', 'SELECT * FROM T1')
 
-        # Stop and restart the node
+        # Restart the node, also can be used node.restart()
         node.stop()
         node.slow_start()
 
-        # Create a new table in the 'postgres' database
+        # Create a new table in the 'postgres' database and fill
         node.safe_psql(
             'postgres',
             'CREATE TABLE t_heap AS SELECT 1 AS id, md5(i::text) AS text, '
@@ -54,7 +61,7 @@ class TestgresFirstStep(unittest.TestCase):
             'generate_series(0,100) i'
         )
 
-        # Calculate and store the checksum of the table before modification
+        # For fast comparing tables  can be used table_checksum function
         before_checksum = node.table_checksum('t_heap')
 
         # Insert new rows into the table
@@ -71,12 +78,13 @@ class TestgresFirstStep(unittest.TestCase):
         # Assert that the checksums are different, indicating a change in the table
         assert after_checksum != before_checksum
 
-        # Get control data before running pgbench
+        # - Testgres has ability to read params from pg_control file
         before_control_data = node.get_control_data()
         time_checkpoint_before = before_control_data['Time of latest checkpoint']
 
         # Initialize and run pgbench
         node.pgbench_init(scale=100, no_vacuum=True)
+        # for 5 sec, 2 clients
         pgbench = node.pgbench(options=['-T', '5', '-c', '2'])
         pgbench.wait()
 
