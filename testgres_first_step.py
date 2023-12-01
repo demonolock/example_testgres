@@ -46,10 +46,10 @@ class TestgresFirstStep(unittest.TestCase):
         # Create a new database and a table within it
         node.safe_psql('postgres', 'CREATE DATABASE test1')
         node.safe_psql('test1', 'CREATE TABLE T1 AS SELECT GENERATE_SERIES(0,100)')
-        # The resutl of query can be get and processed
+        # The result of a query can be obtained and processed
         result = node.safe_psql('test1', 'SELECT * FROM T1')
 
-        # Restart the node, also node.restart() can be used
+        # Restart the node (also node.restart() can be used)
         node.stop()
         node.slow_start()
 
