@@ -3,7 +3,8 @@ import testgres
 import unittest
 
 """
-The PG_CONFIG environment variable must be set before runnig the test
+The PG_CONFIG environment variable may be set before runnig the test.
+Otherwise Testgres will try to find pg_config in known locations.
 """
 
 # Define the node name and paths for the test environment
